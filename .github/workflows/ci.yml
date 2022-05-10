@@ -1,4 +1,4 @@
-name: ngflask CI
+name: parrot-feeder CI
 
 # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions
 on:
@@ -20,10 +20,6 @@ jobs:
         with:
           current_version: ${{ steps.get-latest-tag.outputs.tag }}
           level: minor
-      - uses: actions-ecosystem/action-push-tag@v1
-        with:
-          tag: ${{ steps.bump-semver.outputs.new_version }}
-          message: '${{ steps.bump-semver.outputs.new_version }}: PR #${{ github.event.pull_request.number }} ${{ github.event.pull_request.title }}'
       - uses: actions/checkout@master
       - name: Set up Python 3.9
         uses: actions/setup-python@v1
@@ -49,6 +45,10 @@ jobs:
         with:
           password: ${{ secrets.PYPI_TEST_API_TOKEN }}
           repository_url: https://test.pypi.org/legacy/
+      - uses: actions-ecosystem/action-push-tag@v1
+        with:
+          tag: ${{ steps.bump-semver.outputs.new_version }}
+          message: '${{ steps.bump-semver.outputs.new_version }}: PR #${{ github.event.pull_request.number }} ${{ github.event.pull_request.title }}'
 
   release-version:
     runs-on: ubuntu-latest
