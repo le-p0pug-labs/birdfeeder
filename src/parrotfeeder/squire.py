@@ -8,7 +8,7 @@ from telegram.ext import Updater, CommandHandler
 from telegram.utils.helpers import escape_markdown
 
 from config import TOKEN, WHITELIST
-from src.parrotfeeder.paths import PATHS
+from src.parrotfeeder.config import PATHS
 
 
 logging.basicConfig(
