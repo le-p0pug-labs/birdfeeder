@@ -1,6 +1,10 @@
 ## General Information
 Advanced multichannel file sharing web server
 
+https://hub.docker.com/r/lep0puglabs/parrot-feeder
+
+https://pypi.org/project/parrot-feeder/
+
 ## Installation
 
 Build the Docker image:
