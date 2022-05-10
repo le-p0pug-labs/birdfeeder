@@ -10,50 +10,49 @@ on:
 jobs:
   create-version:
     runs-on: ubuntu-latest
-      if: github.ref == 'refs/heads/develop'
-      steps:
-        - uses: actions/checkout@v2
-        - uses: actions-ecosystem/action-get-latest-tag@v1
-          id: get-latest-tag
-        - uses: actions-ecosystem/action-bump-semver@v1
-          id: bump-semver
-          with:
-            current_version: ${{ steps.get-latest-tag.outputs.tag }}
-            level: minor
-        - uses: actions-ecosystem/action-push-tag@v1
-          with:
-            tag: ${{ steps.bump-semver.outputs.new_version }}
-            message: '${{ steps.bump-semver.outputs.new_version }}: PR #${{ github.event.pull_request.number }} ${{ github.event.pull_request.title }}'
-        - uses: actions/checkout@master
-        - name: Set up Python 3.9
-          uses: actions/setup-python@v1
-          with:
-            python-version: 3.9
-        - name: Install PyPA/Build
-          run: >-
-            python -m
-            pip install
-            build
-            --user
-        - name: Build a binary wheel and a source tarball
-          env:
-            PARROT_FEEDER_VERSION: ${{ steps.get-latest-tag.outputs.tag }}
-          run: >-
-            python -m
-            build
-            --sdist
-            --wheel
-            --outdir dist/
-        - name: Publish distribution to Test PyPI
-          uses: pypa/gh-action-pypi-publish@master
-          with:
-            password: ${{ secrets.PYPI_TEST_API_TOKEN }}
-            repository_url: https://test.pypi.org/legacy/
+    if: github.ref == 'refs/heads/develop'
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-ecosystem/action-get-latest-tag@v1
+        id: get-latest-tag
+      - uses: actions-ecosystem/action-bump-semver@v1
+        id: bump-semver
+        with:
+          current_version: ${{ steps.get-latest-tag.outputs.tag }}
+          level: minor
+      - uses: actions-ecosystem/action-push-tag@v1
+        with:
+          tag: ${{ steps.bump-semver.outputs.new_version }}
+          message: '${{ steps.bump-semver.outputs.new_version }}: PR #${{ github.event.pull_request.number }} ${{ github.event.pull_request.title }}'
+      - uses: actions/checkout@master
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.9
+      - name: Install PyPA/Build
+        run: >-
+          python -m
+          pip install
+          build
+          --user
+      - name: Build a binary wheel and a source tarball
+        env:
+          PARROT_FEEDER_VERSION: ${{ steps.get-latest-tag.outputs.tag }}
+        run: >-
+          python -m
+          build
+          --sdist
+          --wheel
+          --outdir dist/
+      - name: Publish distribution to Test PyPI
+        uses: pypa/gh-action-pypi-publish@master
+        with:
+          password: ${{ secrets.PYPI_TEST_API_TOKEN }}
+          repository_url: https://test.pypi.org/legacy/
 
   release-version:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/master'
-
     steps:
         - uses: actions/checkout@v2
           - uses: actions-ecosystem/action-get-latest-tag@v1
