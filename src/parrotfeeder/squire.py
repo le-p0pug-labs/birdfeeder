@@ -8,7 +8,7 @@ from telegram.ext import Updater, CommandHandler
 from telegram.utils.helpers import escape_markdown
 
 from config import TOKEN, WHITELIST
-from src.parrotfeeder.config import PATHS
+from config import PATHS
 
 
 logging.basicConfig(
@@ -141,8 +141,7 @@ def error(update, context):
     """Log Errors caused by Updates."""
     logger.warning(f"Update {update} caused error {context.error}")
 
-
-def main():
+def create_squire(token: str):
     updater = Updater(TOKEN, use_context=True)
     # Note that this is only necessary in version 12 of python-telegram-bot. Version 13 will have use_context=True set as default.
 
@@ -158,6 +157,9 @@ def main():
     logger.info("BOT DEPLOYED. Ctrl+C to terminate")
 
     updater.idle()
+
+def main():
+    create_squire(TOKEN)
 
 
 if __name__ == "__main__":

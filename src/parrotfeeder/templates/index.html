@@ -86,7 +86,7 @@ input[type=button], input[type=submit], input[type=reset] {
 </head>
 <body>
 
-  <form method=post enctype=multipart/form-data>
+  <form method=post enctype=multipart/form-data action="/api/upload">
     <input id="dir-box" type="text" name="path" {% if last_used_dir %} value="{{ last_used_dir }}" {% else %} placeholder="complete or relative dir path" {% endif %}>
     \ <input type="file" name="file" multiple><br>
     <input type="submit" value="⭱ Upload ⭱">
