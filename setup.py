@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 import os
 
-version = os.getenv('PARROT_FEEDER_VERSION')
+version = os.getenv("PARROT_FEEDER_VERSION")
 if not version:
     version = "1.0.0"
+
+if version.startswith("v"):
+    version = version.lstrip("v")
 
 # Always prefer setuptools over distutils
 from setuptools import setup, find_packages
