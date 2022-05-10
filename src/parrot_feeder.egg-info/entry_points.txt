@@ -1,2 +1,0 @@
-[console_scripts]
-parrot-feeder = parrotfeeder.parrot_feeder:main
