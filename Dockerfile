@@ -1,4 +1,4 @@
-FROM python:3.11.0a7-bullseye
+FROM python:3.8.13-bullseye
 
 ARG VERSION
 ENV PARROT_FEEDER_VERSION="$VERSION"
@@ -17,6 +17,8 @@ COPY setup.py "$PARROT_FEEDER_HOME"
 COPY src "$PARROT_FEEDER_HOME/src"
 
 WORKDIR "$PARROT_FEEDER_HOME"
-RUN python3 -m build --sdist --wheel --outdir dist
+RUN python3 -m build --sdist --wheel --outdir dist && \
+    pip3 install ./dist/parrot*.whl
 
+ENTRYPOINT ["parrot-feeder"]
 
