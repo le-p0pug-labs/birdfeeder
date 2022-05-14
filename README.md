@@ -12,7 +12,7 @@ Parrot-feeder is an all-in-one combination of the following tools:
 - https://github.com/mtalimanchuk/file-squire-bot
 
 It makes file transferring over Internet easier by giving you a tool to share a local directory through the Ngrok network. 
-It lists the local file, creates a local web server with Flask and creates an Ngrok tunnel to the port used by the Flask server.
+It lists the given directory, creates a local web server with Flask, make this server sharing the listed files and creates an Ngrok tunnel to the port used by the Flask server.
 
 It also exposes an HTML page under the `/api/upload` path with a form for uploading files to the remote machine.
 
