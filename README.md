@@ -1,5 +1,8 @@
 ## General Information
-Advanced multichannel file sharing web server.
+
+See also:
+- https://hub.docker.com/r/lep0puglabs/parrot-feeder
+- https://pypi.org/project/parrot-feeder/
 
 Parrot-feeder is an all-in-one combination of the following tools:
 
@@ -7,17 +10,15 @@ Parrot-feeder is an all-in-one combination of the following tools:
 - https://github.com/mtalimanchuk/flask-filebox
 - https://github.com/mtalimanchuk/file-squire-bot
 
-When you use parrot-feeder, it starts sharing files from the current directory if no `-d` flag has been specified.
-It also exposes an HTML page under the `/api/upload` path with a form for uploading files to the remote machine.
+When you use parrot-feeder, it starts sharing files from the current directory if no `-d` flas has been specified.
+It also exposes an HTML page for uploading files to the remote machine under the `/api/upload` path.
 
 Finally, if you supply a telegram bot token via the `--telegram-bot-token` argument or 
 via the `TELEGRAM_BOT_TOKEN` arguments, 
 you will also activate a telegram bot that will `/fetch` or `/tail` files for you.
-
-*Note-1: you also need to supply the `--telegram-bot-whitelist` or `TELEGRAM_BOT_WHITELIST` 
+*Note: you also need to supply the `--telegram-bot-whitelist` or `TELEGRAM_BOT_WHITELIST` 
 to specify the users allowed to interact with the bot.*
-
-*Note-2: you may need to sign up for Ngrok for tunneling HTML pages.*
+*Note: you may need to sign up for Ngrok for tunneling HTML pages.*
 
 ## Installation
 
@@ -49,10 +50,6 @@ After starting the server, you can navigate to the following URLs:
 Serve files and folder from the current working directory 
 
 `parrot-feeder`
-
-or 
-
-`docker run --rm -it -p 4200:4200 parrot-feeder`
 
 Serve files and folders from the /tmp directory 
 
