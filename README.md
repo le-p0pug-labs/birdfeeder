@@ -1,6 +1,10 @@
 ## General Information
 Advanced multichannel file sharing web server.
 
+See also:
+- https://hub.docker.com/r/lep0puglabs/parrot-feeder
+- https://pypi.org/project/parrot-feeder/
+
 Parrot-feeder is an all-in-one combination of the following tools:
 
 - https://github.com/cyberhexe/ngflask
@@ -21,7 +25,13 @@ to specify the users allowed to interact with the bot.*
 
 ## Installation
 
-Build the Docker image:
+Download the Docker image:
+
+```bash
+docker pull lep0puglabs/parrot-feeder:latest
+```
+
+or build the Docker image yourself:
 
 ```bash
 docker build -t parrot-feeder -f ./Dockerfile .
