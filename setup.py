@@ -49,7 +49,8 @@ setup(
     install_requires=[
         "flask",
         'flask-autoindex',
-        "pyngrok"
+        "pyngrok",
+        "python-telegram-bot==12.0.0b1"
     ],  # Optional
     entry_points={  # Optional
         'console_scripts': [
