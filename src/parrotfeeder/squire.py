@@ -1,22 +1,20 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-from functools import wraps
 import logging
+from functools import wraps
+from pathlib import Path
+from os import access, R_OK
 
 from telegram import ParseMode
 from telegram.ext import Updater, CommandHandler
 from telegram.utils.helpers import escape_markdown
 
-from config import TOKEN, WHITELIST
-from config import PATHS
-
-
 logging.basicConfig(
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    format=" * %(asctime)s - %(name)s - %(levelname)s - %(message)s",
     level=logging.INFO,
-    filename="squire.log",
 )
 logger = logging.getLogger(__name__)
+
+global_users_whitelist = []
 
 
 def whitelist_only(func):
@@ -26,7 +24,7 @@ def whitelist_only(func):
         logger.info(
             f"@{user.username} ({user.id}) is trying to access a privileged command"
         )
-        if user.id not in WHITELIST:
+        if user.username not in global_users_whitelist:
             logger.warning(f"Unauthorized access denied for {user.username}.")
             text = (
                 "🚫 *ACCESS DENIED*\n"
@@ -43,57 +41,29 @@ def parse_args(context_args):
     for arg in context_args:
         try:
             path_alias = arg
-            path = PATHS[path_alias].expanduser()
+            path = Path(path_alias).expanduser()
             msg_text = f"`{path}`"
             if path.exists():
+                if not access(path, R_OK):
+                    raise PermissionError
                 yield True, path, msg_text
             else:
                 raise FileNotFoundError
-        except KeyError:
-            error_text = (
-                f"❌\nCouldn't find alias *{path_alias}*.\n"
-                f"Make sure you've added it to `paths.py`"
-            )
-            yield False, arg, error_text
         except FileNotFoundError:
             error_text = (
                 f"❌\n*{path}* does not exist.\n"
                 f"Make sure  alias `{path_alias}` is pointing to an existing file"
             )
             yield False, arg, error_text
+        except PermissionError:
+            error_text = (
+                f"❌\n*{path}*: permission denied.\n"
+            )
+            yield False, arg, error_text
         except AttributeError:
             # sometimes editing a previously sent chat message
             # triggers the handler with an empty update
             pass
-
-
-def start(update, context):
-    """Send a message when the command /start is issued."""
-    text = (
-        "Hi!"
-        "I can /fetch or /tail you some files if you are whitelisted\n"
-        "/help to learn more"
-    )
-    update.message.reply_text(text)
-
-
-def show_help(update, context):
-    """Send a message when the command /help is issued."""
-    howto = (
-        f"▪️Download this [repo](https://github.com/mtalimanchuk/file-squire-bot) to your remote machine\n"
-        f"\n"
-        f"▪️Open `config.py`, set your `TOKEN` (string) and `WHITELIST` (list of user IDs)\n"
-        f"\n"
-        f"▪️Open `paths.py`, add aliases and paths to `{escape_markdown('PATH_MAP')}`:\n"
-        f"\n"
-        f"`PATH_MAP = {{\n"
-        f'\t"me": "squire.log", \n'
-        f'\t"flask": "myflaskapp/logs/errors.log"\n}}`\n'
-        f"\n"
-        f"▪️Start the bot. Fetch files using aliases in `paths.py`\n"
-        f"\t`/fetch me` to get _squire.log_"
-    )
-    update.message.reply_text(howto, parse_mode=ParseMode.MARKDOWN)
 
 
 @whitelist_only
@@ -132,35 +102,47 @@ def tail_file(update, context):
         text = (
             "⚠️\nPlease provide a configured path:\n"
             "`/tail log_alias`\n"
-            "You can add them to `paths.py`"
         )
         update.message.reply_text(text, parse_mode=ParseMode.MARKDOWN)
 
 
-def error(update, context):
-    """Log Errors caused by Updates."""
-    logger.warning(f"Update {update} caused error {context.error}")
+class Squire:
+    def __init__(self, token: str, users_whitelist: list):
+        self.token = token
+        self.users_whitelist = users_whitelist
+        global global_users_whitelist
+        global_users_whitelist = list.copy(self.users_whitelist)
+        self.updater = Updater(self.token, use_context=True)
 
-def create_squire(token: str):
-    updater = Updater(TOKEN, use_context=True)
-    # Note that this is only necessary in version 12 of python-telegram-bot. Version 13 will have use_context=True set as default.
+        self.dp = self.updater.dispatcher
+        self.dp.add_handler(CommandHandler("start", self.start))
+        self.dp.add_handler(CommandHandler("help", self.show_help))
+        self.dp.add_handler(CommandHandler("fetch", fetch_file))
+        self.dp.add_handler(CommandHandler("tail", tail_file))
+        self.dp.add_error_handler(self.error)
 
-    dp = updater.dispatcher
+        self.updater.start_polling()
+        logger.info("BOT DEPLOYED. Ctrl+C to terminate")
 
-    dp.add_handler(CommandHandler("start", start))
-    dp.add_handler(CommandHandler("help", show_help))
-    dp.add_handler(CommandHandler("fetch", fetch_file))
-    dp.add_handler(CommandHandler("tail", tail_file))
-    dp.add_error_handler(error)
+        self.updater.idle()
 
-    updater.start_polling()
-    logger.info("BOT DEPLOYED. Ctrl+C to terminate")
+    def start(self, update, context):
+        """Send a message when the command /start is issued."""
+        text = (
+            "Hi!"
+            "I can /fetch or /tail you some files if you are whitelisted\n"
+            "/help to learn more"
+        )
+        update.message.reply_text(text)
 
-    updater.idle()
+    def show_help(self, update, context):
+        """Send a message when the command /help is issued."""
+        howto = (
+            f"▪Fetch files using the `/fetch` command.\n"
+            f"\tE.g., `/fetch /etc/passwd` or `/tail /etc/passwd`"
+        )
+        update.message.reply_text(howto, parse_mode=ParseMode.MARKDOWN)
 
-def main():
-    create_squire(TOKEN)
-
-
-if __name__ == "__main__":
-    main()
+    def error(self, update, context):
+        error = context.error
+        logger.warning(f"Update {update} caused error '{type(error)}': {error}")
