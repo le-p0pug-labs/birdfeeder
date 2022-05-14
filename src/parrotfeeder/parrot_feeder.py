@@ -4,22 +4,30 @@ import os
 import tarfile
 import zipfile
 from pathlib import Path
+from threading import Thread
 
 from flask import Flask, flash, request, redirect, render_template, jsonify, send_file, Response
 from flask_autoindex import AutoIndex
 from pyngrok import ngrok
 from werkzeug.utils import secure_filename
 
-from squire import create_squire
+from squire import Squire
 
 DEFAULT_IP = "127.0.0.1"
 DEFAULT_PORT = 4200
 DEFAULT_DIRECTORY = os.getcwd()
 
+TELEGRAM_BOT_TOKEN_PARAMETER_NAME = "TELEGRAM_BOT_TOKEN"
+TELEGRAM_WHITELIST_PARAMETER_NAME = "TELEGRAM_BOT_WHITELIST"
 
 def get_arguments():
     from argparse import ArgumentParser
     parser = ArgumentParser(description='The parrot-feeder server')
+    parser.add_argument('--debug',
+                        dest='debug',
+                        required=False,
+                        action='store_true',
+                        help="Enable debug mode")
     parser.add_argument('-i',
                         "--ip",
                         dest="ip",
@@ -56,19 +64,40 @@ def get_arguments():
                         dest='telegram_bot_token',
                         required=False,
                         type=str,
-                        help="Specify an access token for the Squire telegram bot")
+                        help="Specify an access token for the Squire telegram bot. "
+                             f"The environment variable {TELEGRAM_BOT_TOKEN_PARAMETER_NAME} always has the priority over this argument.")
+    parser.add_argument('--telegram-users-whitelist',
+                        dest='telegram_users_whitelist',
+                        required=False,
+                        type=str,
+                        help="Specify a comma-separated list of telegram usernames allowed to use the bot. "
+                             "This argument needs to be specified "
+                             "if you're enabling the squire bot by giving the --telegram-bot-token argument."
+                             f"The environment variable {TELEGRAM_WHITELIST_PARAMETER_NAME} "
+                             f"always has the priority over this argument.")
     options = parser.parse_args()
-    if os.getenv("TELEGRAM_BOT_TOKEN"):
-        options.telegram_bot_token = os.getenv("TELEGRAM_BOT_TOKEN")
+    if os.getenv(TELEGRAM_BOT_TOKEN_PARAMETER_NAME):
+        options.telegram_bot_token = os.getenv(TELEGRAM_BOT_TOKEN_PARAMETER_NAME)
+    if os.getenv(TELEGRAM_WHITELIST_PARAMETER_NAME):
+        options.telegram_users_whitelist = os.getenv(TELEGRAM_WHITELIST_PARAMETER_NAME)
+    if options.telegram_bot_token and not options.telegram_users_whitelist:
+        parser.error("--telegram-users-whitelist must be specified if you're using --telegram-bot-token")
+    if not options.telegram_bot_token and options.telegram_users_whitelist:
+        parser.error("--telegram-bot-token must be specified if you're using --telegram-users-whitelist")
     return options
 
 
 class TunneledHttpServer:
-    def __init__(self, ip: str, port: int, directory: str, print_files: bool = False):
+    def __init__(self, ip: str,
+                 port: int,
+                 directory: str,
+                 print_files: bool = False,
+                 debug: bool = False):
         self.ip = ip
         self.port = port
         self.directory = directory
         self.print_files = print_files
+        self.debug = debug
 
         self.app = Flask(__name__)
         self.app.config['LAST_USED_DIR'] = None
@@ -229,7 +258,9 @@ class TunneledHttpServer:
         else:
             print(f" * Hint: use -pf or --print-files for printing URLs for all the files shared over ngflask")
         self.app.config["BASE_URL"] = self.public_url
-        self.app.run(host=self.ip, port=self.port, debug=True)
+
+        self.flask_thread = Thread(target=self.app.run, args=(self.ip, self.port, self.debug))
+        self.flask_thread.start()
 
 
 def main():
@@ -237,13 +268,16 @@ def main():
     tunneled_http_server = TunneledHttpServer(ip=options.ip,
                                               port=options.port,
                                               directory=options.directory,
-                                              print_files=options.print_files)
+                                              print_files=options.print_files,
+                                              debug=options.debug)
     tunneled_http_server.start()
 
     telegram_bot_token = options.telegram_bot_token
     if telegram_bot_token:
+        users_whitelist = [line.strip() for line in options.telegram_users_whitelist.split(",") if line.strip()]
         print(" * Starting the squire telegram bot")
-        create_squire(token=telegram_bot_token)
+        print(f" * Access allowed to: {users_whitelist}")
+        Squire(token=telegram_bot_token, users_whitelist=users_whitelist)
 
 
 if __name__ == '__main__':
