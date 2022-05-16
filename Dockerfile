@@ -1,4 +1,4 @@
-FROM python:3.8.13-bullseye
+FROM python:3.10.4-bullseye
 
 ARG VERSION
 ENV PARROT_FEEDER_VERSION="$VERSION"
