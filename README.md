@@ -12,7 +12,10 @@ Parrot-feeder is an all-in-one combination of the following tools:
 - https://github.com/mtalimanchuk/file-squire-bot
 
 It makes file transferring over Internet easier by giving you a tool to share a local directory through the Ngrok network. 
-It lists the given directory, creates a local web server with Flask, make this server sharing the listed files and creates an Ngrok tunnel to the port used by the Flask server. In other words, exposing them on the Internet.
+It lists the given directory, creates a local web server with Flask, make this server sharing the listed files and creates an Ngrok tunnel to the port used by the Flask server. 
+
+In other words, parrot-feeder temporarily exposes your files for downloading on the Internet. 
+Once you stop parrot-feeder, your files stop being shared over Ngrok.
 
 It also exposes an HTML page under the `/api/upload` path with a form for uploading files to the remote machine.
 
@@ -54,13 +57,13 @@ docker run --rm -it -p 4200:4200 parrot-feeder
 Or install the package using PyPI:
 
 ```bash
-pip3 install parrot-feeder
+sudo pip3 install parrot-feeder
 ```
 
 After starting the server, you can navigate to the following URLs:
 
 - / - for seeing the listing
-- /api/upload - for access the API for uploading files
+- /api/upload - for accessing the API for uploading files
 
 ## Usage
 
@@ -80,7 +83,7 @@ Print served files to the console on startup
 
 `parrot-feeder --directory /tmp -pf`
 
-Bind the server to a specific address 
+Bind the server to the given address 
 
 `parrot-feeder --ip 10.10.10.10 --port 5050`
 

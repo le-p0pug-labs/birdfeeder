@@ -50,7 +50,7 @@ setup(
         "flask",
         'flask-autoindex',
         "pyngrok",
-        "python-telegram-bot==12.0.0b1"
+        "python-telegram-bot"
     ],  # Optional
     entry_points={  # Optional
         'console_scripts': [
